@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import java.util.List;
 
 @RestController
@@ -18,6 +19,7 @@ public class ProductAPI {
     }
 
     @PostMapping
+    @RolesAllowed("ROLE_EDITOR") //-----role-based-----//
     public ResponseEntity<ProductEntity> createProduct(@RequestBody ProductEntity product) {
         ProductEntity savedProduct = productRepository.save(product);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
@@ -25,6 +27,7 @@ public class ProductAPI {
 
 //    @CrossOrigin(origins = "*")
     @GetMapping
+    @RolesAllowed({"ROLE_CUSTOMER", "ROLE_EDITOR"}) //-----role-based-----//
     public List<ProductEntity> getAllProducts() {
         List<ProductEntity> results = productRepository.findAll();
         return results;

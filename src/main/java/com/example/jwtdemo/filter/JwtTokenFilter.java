@@ -1,7 +1,9 @@
 package com.example.jwtdemo.filter;
 
+import com.example.jwtdemo.entity.RoleEntity;
 import com.example.jwtdemo.entity.UserEntity;
 import com.example.jwtdemo.util.JwtTokenUtil;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,7 +64,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         UserDetails userDetails = getUserDetails(token);
 
         UsernamePasswordAuthenticationToken
-                authentication = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+                authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()); //-----role-based-----//
 
         authentication.setDetails(
                 new WebAuthenticationDetailsSource().buildDetails(request));
@@ -72,7 +77,27 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private UserDetails getUserDetails(String token) {
         UserEntity userDetails = new UserEntity();
+
+        //-----role-based-----//
+        Claims claims = jwtUtil.parseClaims(token);
+        String subject = (String) claims.get(Claims.SUBJECT);
+        String roles = (String) claims.get("roles");
+
+        roles = roles.replace("[", "").replace("]", "");
+        String[] roleNames = roles.split(", ");
+
+        for (String aRoleName : roleNames) {
+            userDetails.addRole(new RoleEntity(aRoleName));
+        }
+
+        String[] jwtSubject = subject.split(",");
+        //-----role-based-----//
+
+        /*----authentication-------
+
         String[] jwtSubject = jwtUtil.getSubject(token).split(",");
+
+        ----authentication-------*/
 
         userDetails.setId(Integer.parseInt(jwtSubject[0]));
         userDetails.setEmail(jwtSubject[1]);

@@ -1,10 +1,11 @@
 package com.example.jwtdemo.entity;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.util.Collection;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -16,6 +17,16 @@ public class UserEntity implements UserDetails {
     private String email;
     @Column(nullable = false, length = 64)
     private String password;
+
+    //-----role-based-------//
+    @ManyToMany
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles = new HashSet<>();
+    //-----role-based-------//
 
     public UserEntity() {
     }
@@ -49,15 +60,33 @@ public class UserEntity implements UserDetails {
         this.password = password;
     }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+    //-----role-based-------//
+    public Set<RoleEntity> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<RoleEntity> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(RoleEntity role) {
+        this.roles.add(role);
     }
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (RoleEntity role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        }
+        return authorities;
+    }
+    //-----role-based-------//
+
+    @Override
     public String getUsername() {
-//        return this.email;
-        return email.substring(7);
+        return this.email;
+        //return email.substring(7);
     }
 
     @Override
